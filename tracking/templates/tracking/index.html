@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Aircraft by ICAO24</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Track Aircraft</h1>
+    
+    <form id="icaoForm">
+        <label for="icao24">Enter ICAO24 identifier:</label>
+        <input type="text" id="icao24" name="icao24" required>
+        <button type="submit">Track Aircraft</button>
+    </form>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    <script>
+        // Initialize the map and set its view
+        var map = L.map('map').setView([40.7128, -74.0060], 2);  // Example: New York
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors'
+        }).addTo(map);
+
+
+        // Placeholder for the aircraft marker, point list, polyline and route
+        var aircraftMarker = null;
+        var route = null;
+        var track_icao24 = null;
+        var flightPathCoordinates = [];
+        var flightPathPolyline = null;
+
+
+        // Form submission handler
+        document.getElementById('icaoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var icao24 = document.getElementById('icao24').value;
+            track_icao24 = icao24;
+            fetchAircraftData(icao24);
+        });
+
+        // Function to fetch aircraft data by ICAO24
+        function fetchAircraftData(icao24) {
+            fetch(`/api/aircraft/${icao24}/`)
+                .then(response => response.json())
+                .then(data => {
+                    var aircraftData = data.states;
+
+                    // If valid data is received, update the marker and build route
+                    if (aircraftData.length > 0) {
+                        const [icao24, callsign, origin_country, time_position, last_contact, longitude, latitude] = aircraftData[0];
+                        if (latitude && longitude) {
+                            updateAircraftMarker(latitude, longitude, callsign);
+                            buildRoute(latitude, longitude);
+                            flightPathCoordinates.push([latitude, longitude]);
+                            console.log(flightPathCoordinates);
+                            // If there are more than two points, draw polyline
+                            if (flightPathCoordinates.length > 1) {
+                                updateFlightPath();
+                            }
+                        }
+                    } else {
+                        alert("No aircraft found with that ICAO24 identifier.");
+                    }
+                })
+                .catch(error => console.error('Error fetching aircraft data:', error));
+        }
+
+        // Function to update the aircraft marker
+        function updateAircraftMarker(lat, lon, callsign) {
+            // If the marker exists, update its position
+            if (aircraftMarker) {
+                aircraftMarker.setLatLng([lat, lon]).bindPopup(`Callsign: ${callsign}`);
+            } else {
+                // Otherwise, create a new marker
+                aircraftMarker = L.marker([lat, lon]).addTo(map)
+                    .bindPopup(`Callsign: ${callsign}`);
+            }
+            map.setView([lat, lon], 5);  // Center map on the aircraft
+        }
+
+
+        // Routing function
+        function buildRoute(lat, lng){
+            if (route){                               // checks if a route exists and replaces start coordinates
+                var newLatLng = new L.latLng(lat,lng)
+                route.spliceWaypoints(0, 1, newLatLng)
+            } else {
+                route = L.Routing.control({
+                waypoints: [
+                L.latLng(lat, lng),
+                L.latLng(48.8575, 2.3514) // using set coordinates for now - Paris
+                ],
+                routeWhileDragging: true
+                }).addTo(map);
+            }
+        };
+
+        
+        // Function to update the flight path (polyline) on the map
+        function updateFlightPath() {
+            // Remove the previous polyline if it exists
+            if (flightPathPolyline) {
+                map.removeLayer(flightPathPolyline);
+            }
+
+            // Draw a new polyline connecting all the points in the flightPathCoordinates array
+            flightPathPolyline = L.polyline(flightPathCoordinates, {color: 'blue'}).addTo(map);
+        }
+        
+        setInterval(() => {
+            fetchAircraftData(track_icao24);
+        }, 15000);  // Fetch data every 15 seconds
+
+    </script>
+</body>
+</html>
