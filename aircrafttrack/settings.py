@@ -84,9 +84,6 @@ DATABASES = {
 }
 
 
-OPENSKY_USERNAME = os.getenv('OPENSKY_USERNAME')
-OPENSKY_PASSWORD = os.getenv('OPENSKY_PASSSWORD')
-
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
