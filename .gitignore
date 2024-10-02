@@ -1,0 +1,7 @@
+db.sqlite3
+venv/
+.env
+aircrafttrack/__pycache__/
+tracking/__pycache__/
+.vscode/
+.DS_store
