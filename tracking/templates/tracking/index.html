@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track Aircraft by ICAO24</title>
+    <title>Track vehicle by id</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <style>
@@ -15,22 +15,22 @@
     </style>
 </head>
 <body>
-    <h1>Track Aircraft</h1>
+    <h1>Track Vehicle</h1>
     
     <form id="icaoForm">
-        <label for="icao24">Enter ICAO24 identifier:</label>
+        <label for="icao24">Enter vehicle id:</label>
         <input type="text" id="icao24" name="icao24" required>
-        <button type="submit">Track Aircraft</button>
+        <button type="submit">Track Vehicle</button>
     </form>
 
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-    <script src="{% static 'tracking/lrm-graphhopper.js' %}"></script>
+    <!-- <script src="{% static 'tracking/lrm-graphhopper.js' %}"></script> -->
     <script>
         // Initialize the map and set its view
-        var map = L.map('map').setView([40.7128, -74.0060], 2);  // Example: New York
+        var map = L.map('map').setView([41.306217, 69.282311], 5);  // Tashkent
 
         // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -40,7 +40,7 @@
         // Plane icon
         var planeIcon = L.icon({
 			iconUrl: 'https://api.iconify.design/twemoji:airplane.svg', 
-			iconSize: [70, 70]
+			iconSize: [35, 35]
 		})
 
         var originIcon = L.icon({
@@ -74,39 +74,56 @@
             fetch(`/api/aircraft/${icao24}/`)
                 .then(response => response.json())
                 .then(data => {
-                    var aircraftData = data.states;
-
-                    // If valid data is received, update the marker and build route
-                    if (aircraftData.length > 0) {
-                        const [icao24, callsign, origin_country, time_position, last_contact, longitude, latitude] = aircraftData[0];
+                    const aircraftData = data.location;
+                    console.log(aircraftData);
+                    if (aircraftData !== null) {
+                        
+                        const latitude = aircraftData['y'];
+                        const longitude = aircraftData['x'];
+                        console.log(latitude, longitude);
                         if (latitude && longitude) {
-                            updateAircraftMarker(latitude, longitude, callsign);
-                            buildRoute(latitude, longitude);
+                            updateAircraftMarker(latitude, longitude);
                             flightPathCoordinates.push([latitude, longitude]);
                             console.log(flightPathCoordinates);
                             // If there are more than two points, draw polyline
                             if (flightPathCoordinates.length > 1) {
-                                updateFlightPath();
+                                updateFlightPath;
                             }
                         }
                     } else {
                         alert("No aircraft found with that ICAO24 identifier.");
                     }
+
+                    // // If valid data is received, update the marker and build route
+                    // if (aircraftData.length > 0) {
+                    //     const [icao24, callsign, origin_country, time_position, last_contact, longitude, latitude] = aircraftData[0];
+                    //     if (latitude && longitude) {
+                    //         updateAircraftMarker(latitude, longitude, callsign);
+                    //         //buildRoute(latitude, longitude);
+                    //         flightPathCoordinates.push([latitude, longitude]);
+                    //         console.log(flightPathCoordinates);
+                    //         // If there are more than two points, draw polyline
+                    //         // if (flightPathCoordinates.length > 1) {
+                    //         //     updateFlightPath();
+                    //         // }
+                    //     }
+                    // } else {
+                    //     alert("No aircraft found with that ICAO24 identifier.");
+                    // }
                 })
                 .catch(error => console.error('Error fetching aircraft data:', error));
         }
 
         // Function to update the aircraft marker
-        function updateAircraftMarker(lat, lon, callsign) {
+        function updateAircraftMarker(lat, lon) {
             // If the marker exists, update its position
             if (aircraftMarker) {
-                aircraftMarker.setLatLng([lat, lon], { icon: planeIcon }).bindPopup(`Callsign: ${callsign}`);
+                aircraftMarker.setLatLng([lat, lon], { icon: planeIcon });
             } else {
                 // Otherwise, create a new marker
-                aircraftMarker = L.marker([lat, lon], { icon: planeIcon }).addTo(map)
-                    .bindPopup(`Callsign: ${callsign}`);
+                aircraftMarker = L.marker([lat, lon], { icon: planeIcon }).addTo(map);
             }
-            map.setView([lat, lon], 5);  // Center map on the aircraft
+            map.setView([lat, lon], 13);  // Center map on the aircraft
         }
 
 
@@ -159,7 +176,7 @@
         
         setInterval(() => {
             fetchAircraftData(track_icao24);
-        }, 15000);  // Fetch data every 15 seconds
+        }, 10000);  // Fetch data every 15 seconds
 
     </script>
 </body>
