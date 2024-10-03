@@ -7,10 +7,19 @@
     <title>Track vehicle by id</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
     <style>
         #map {
             height: 500px;
             width: 100%;
+        }
+
+        .leaflet-control-container .leaflet-routing-container-hide {
+            display: none;
+        }
+        body {
+            font-family: "Nunito", sans-serif;
         }
     </style>
 </head>
@@ -160,6 +169,7 @@
                     }
                 }
                 }).addTo(map);
+                route.hide();
             }
         };
 
