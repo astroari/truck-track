@@ -13,13 +13,21 @@
 
 </head>
 <body>
-    <h1>Track Vehicle</h1>
+    <!-- <h1>Track Vehicle</h1> -->
     
-    <form id="icaoForm">
-        <label for="icao24">Enter vehicle id:</label>
-        <input type="text" id="icao24" name="icao24" required>
-        <button type="submit">Track Vehicle</button>
-    </form>
+    <div id="cover">
+        <form id="icaoForm">
+          <div class="tb">
+            <div class="td"><input type="text" id="icao24" name="icao24" placeholder="Enter vehicle id" required></div>
+            <div class="td" id="s-cover">
+              <button type="submit">
+                <div id="s-circle"></div>
+                <span></span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
 
     <div id="map"></div>
 
