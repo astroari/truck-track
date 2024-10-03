@@ -83,11 +83,12 @@
                         console.log(latitude, longitude);
                         if (latitude && longitude) {
                             updateAircraftMarker(latitude, longitude);
+                            buildRoute(latitude, longitude);
                             flightPathCoordinates.push([latitude, longitude]);
                             console.log(flightPathCoordinates);
                             // If there are more than two points, draw polyline
                             if (flightPathCoordinates.length > 1) {
-                                updateFlightPath;
+                                updateFlightPath();
                             }
                         }
                     } else {
@@ -138,7 +139,7 @@
                 L.latLng(lat, lng),
                 L.latLng(41.306217, 69.282311) // using set coordinates for now - Tashkent city centre
                 ],
-                serviceUrl: 'http://127.0.0.1:5000/route/v1/driving/', // my own osrm server
+                serviceUrl: 'http://127.0.0.1:5000/route/v1', // my own osrm server
                 createMarker: function(i, wp, nWps) {
                     //if (i === 0 || i === nWps - 1) {
                     if (i === 0) {
