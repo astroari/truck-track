@@ -18,7 +18,7 @@
     <div id="cover">
         <form id="icaoForm">
           <div class="tb">
-            <div class="td"><input type="text" id="icao24" name="icao24" placeholder="Enter vehicle id" required></div>
+            <div class="td"><input type="text" id="icao24" name="icao24" placeholder="Enter order id" required></div>
             <div class="td" id="s-cover">
               <button type="submit">
                 <div id="s-circle"></div>
@@ -33,7 +33,6 @@
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-    <!-- <script src="{% static 'tracking/lrm-graphhopper.js' %}"></script> -->
     <script>
         // Initialize the map and set its view
         var map = L.map('map').setView([41.306217, 69.282311], 5);  // Tashkent
@@ -57,6 +56,11 @@
         var destIcon = L.icon({
 			iconUrl: 'https://api.iconify.design/gis:flag-finish.svg', 
 			iconSize: [70, 70]
+		})
+
+        var truckIcon = L.icon({
+			iconUrl: '{% static "tracking/truckiso.png"%}', 
+			iconSize: [35, 35]
 		})
 
         // Placeholder for the aircraft marker, point list, polyline and route
@@ -89,7 +93,7 @@
                         console.log(latitude, longitude);
                         if (latitude && longitude) {
                             updateAircraftMarker(latitude, longitude);
-                            buildRoute(latitude, longitude);
+                            //buildRoute(latitude, longitude);
                             flightPathCoordinates.push([latitude, longitude]);
                             console.log(flightPathCoordinates);
                             // If there are more than two points, draw polyline
@@ -109,10 +113,10 @@
         function updateAircraftMarker(lat, lon) {
             // If the marker exists, update its position
             if (aircraftMarker) {
-                aircraftMarker.setLatLng([lat, lon], { icon: planeIcon });
+                aircraftMarker.setLatLng([lat, lon], { icon: truckIcon });
             } else {
                 // Otherwise, create a new marker
-                aircraftMarker = L.marker([lat, lon], { icon: planeIcon }).addTo(map);
+                aircraftMarker = L.marker([lat, lon], { icon: truckIcon }).addTo(map);
             }
             map.setView([lat, lon], 13);  // Center map on the aircraft
         }
@@ -170,9 +174,9 @@
             flightPathPolyline = L.polyline(flightPathCoordinates, {color: 'blue'}).addTo(map);
         }
         
-        // setInterval(() => {
-        //     fetchAircraftData(track_icao24);
-        // }, 10000);  // Fetch data every 15 seconds
+        setInterval(() => {
+            fetchAircraftData(track_icao24);
+        }, 10000);  // Fetch data every 10 seconds
 
     </script>
 </body>
