@@ -9,8 +9,8 @@ from django.utils import timezone
 from datetime import timedelta
 
 api_url = 'http://1.gpsmonitor.uz/wialon/ajax.html'
-api_token = "9507c2ae48bac73a7204cdc1f5b55717934F0DA4730AE78BF6CB056330380B67BEF31945"
-crm_token = "HMl2bfCJyLEUEMMbzQ-A9_Ywx8HJpneNtWRNt9T9YfIj6fRWgnc1_YAChYMJzR0yuIswJLpbNmKDK6Ew2vx3KNeFGmDO03IgZ6AsmfE3q-mPlOhH76qmGNojubJW5k7LDv4px0mp-cQQvP3lFORKPwcsLxlBhtSogzKnaYWfmLgXnD8uMwphrRc2HG-qY7iqYU0_NsoYU0Eo-LCFmpbmiEHug70MhqEtRXW-N5UepiMpq9_kunuruY4HmV"
+api_token = settings.WIALON_TOKEN
+crm_token = settings.EMAN_CRM_TOKEN
 
 class VehicleLocationView(View):
 
