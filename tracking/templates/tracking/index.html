@@ -90,6 +90,12 @@
                         
                         const latitude = aircraftData['y'];
                         const longitude = aircraftData['x'];
+                        const startLat = aircraftData['start_lat'];
+                        const startLng = aircraftData['start_long'];
+                        const destinationLat = aircraftData['destination_lat'];
+                        const destinationLng = aircraftData['destination_long'];
+                        var startMarker = L.marker([startLat, startLng],{ icon: originIcon }).addTo(map); // these markers shouldn't be called if we are using routing functin i think
+                        var destinationMarker = L.marker([destinationLat, destinationLng],{ icon: destIcon }).addTo(map);
                         console.log(latitude, longitude);
                         if (latitude && longitude) {
                             updateAircraftMarker(latitude, longitude);
