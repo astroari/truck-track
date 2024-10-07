@@ -42,20 +42,16 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors'
         }).addTo(map);
 
-        // Plane icon
-        var planeIcon = L.icon({
-			iconUrl: 'https://api.iconify.design/twemoji:airplane.svg', 
+        // Icons
+
+        var originIcon = L.icon({
+			iconUrl: '{% static "tracking/shopiso.png"%}', 
 			iconSize: [35, 35]
 		})
 
-        var originIcon = L.icon({
-			iconUrl: 'https://api.iconify.design/gis:flag-start.svg', 
-			iconSize: [70, 70]
-		})
-
         var destIcon = L.icon({
-			iconUrl: 'https://api.iconify.design/gis:flag-finish.svg', 
-			iconSize: [70, 70]
+			iconUrl: '{% static "tracking/destiso.png"%}', 
+			iconSize: [35, 35]
 		})
 
         var truckIcon = L.icon({
