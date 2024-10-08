@@ -42,20 +42,16 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors'
         }).addTo(map);
 
-        // Plane icon
-        var planeIcon = L.icon({
-			iconUrl: 'https://api.iconify.design/twemoji:airplane.svg', 
+        // Icons
+
+        var originIcon = L.icon({
+			iconUrl: '{% static "tracking/shopiso.png"%}', 
 			iconSize: [35, 35]
 		})
 
-        var originIcon = L.icon({
-			iconUrl: 'https://api.iconify.design/gis:flag-start.svg', 
-			iconSize: [70, 70]
-		})
-
         var destIcon = L.icon({
-			iconUrl: 'https://api.iconify.design/gis:flag-finish.svg', 
-			iconSize: [70, 70]
+			iconUrl: '{% static "tracking/destiso.png"%}', 
+			iconSize: [35, 35]
 		})
 
         var truckIcon = L.icon({
@@ -69,6 +65,9 @@
         var track_icao24 = null;
         var flightPathCoordinates = [];
         var flightPathPolyline = null;
+
+        // Check initial position of truck marker (to stay zoomed in)
+        let isInitialPosition = true;
 
 
         // Form submission handler
@@ -90,6 +89,12 @@
                         
                         const latitude = aircraftData['y'];
                         const longitude = aircraftData['x'];
+                        const startLat = aircraftData['start_lat'];
+                        const startLng = aircraftData['start_long'];
+                        const destinationLat = aircraftData['destination_lat'];
+                        const destinationLng = aircraftData['destination_long'];
+                        var startMarker = L.marker([startLat, startLng],{ icon: originIcon }).addTo(map); // these markers shouldn't be called if we are using routing functin i think
+                        var destinationMarker = L.marker([destinationLat, destinationLng],{ icon: destIcon }).addTo(map);
                         console.log(latitude, longitude);
                         if (latitude && longitude) {
                             updateAircraftMarker(latitude, longitude);
@@ -118,7 +123,10 @@
                 // Otherwise, create a new marker
                 aircraftMarker = L.marker([lat, lon], { icon: truckIcon }).addTo(map);
             }
-            map.setView([lat, lon], 13);  // Center map on the aircraft
+            if (isInitialPosition) {
+                map.setView([lat, lon], 13);  // Center map on the aircraft
+                isInitialPosition = false;    // Set the flag to false after the initial placement
+            }
         }
 
 
