@@ -66,6 +66,9 @@
         var flightPathCoordinates = [];
         var flightPathPolyline = null;
 
+        // Check initial position of truck marker (to stay zoomed in)
+        let isInitialPosition = true;
+
 
         // Form submission handler
         document.getElementById('icaoForm').addEventListener('submit', function(e) {
@@ -120,7 +123,10 @@
                 // Otherwise, create a new marker
                 aircraftMarker = L.marker([lat, lon], { icon: truckIcon }).addTo(map);
             }
-            map.setView([lat, lon], 13);  // Center map on the aircraft
+            if (isInitialPosition) {
+                map.setView([lat, lon], 13);  // Center map on the aircraft
+                isInitialPosition = false;    // Set the flag to false after the initial placement
+            }
         }
 
 
