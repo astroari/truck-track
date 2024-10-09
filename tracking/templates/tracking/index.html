@@ -70,12 +70,25 @@
         let isInitialPosition = true;
 
 
+        // Placeholder for the interval ID
+        var dataFetchInterval = null;
+
         // Form submission handler
         document.getElementById('icaoForm').addEventListener('submit', function(e) {
             e.preventDefault();
             var icao24 = document.getElementById('icao24').value;
             track_icao24 = icao24;
             fetchAircraftData(icao24);
+
+            // Clear any existing interval
+            if (dataFetchInterval) {
+                clearInterval(dataFetchInterval);
+            }
+
+            // Start a new interval
+            dataFetchInterval = setInterval(() => {
+                fetchAircraftData(track_icao24);
+            }, 10000);  // Fetch data every 10 seconds
         });
 
         // Function to fetch aircraft data by ICAO24
@@ -182,10 +195,6 @@
             flightPathPolyline = L.polyline(flightPathCoordinates, {color: 'blue'}).addTo(map);
         }
         
-        setInterval(() => {
-            fetchAircraftData(track_icao24);
-        }, 10000);  // Fetch data every 10 seconds
-
     </script>
 </body>
 </html>
