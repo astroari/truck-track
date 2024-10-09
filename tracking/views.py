@@ -1,12 +1,13 @@
 from django.shortcuts import render
 import requests
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from requests.auth import HTTPBasicAuth
 from django.conf import settings
 from django.views import View
 import json
 from django.utils import timezone
 from datetime import timedelta
+from django.core.cache import cache
 
 api_url = 'http://1.gpsmonitor.uz/wialon/ajax.html'
 api_token = settings.WIALON_TOKEN
@@ -14,48 +15,72 @@ crm_token = settings.EMAN_CRM_TOKEN
 
 class VehicleLocationView(View):
 
-    session_key = None         # Session is only valid for 5 minutes since last request
-    last_request_time = None
-    courier_id = None
-    unit_id = None
-
     def get(self, request, icao24):
-        # Check if the session key is expired
-        if self.session_key is None or self.is_session_expired():      # Need to limit amount of times we log in
-            self.session_key = self.login(api_token)
-            if not self.session_key:
+        # Try to get the session data from cache
+        session_data = cache.get(f'session_data_{icao24}')
+        
+        if session_data is None or self.is_session_expired(session_data.get('last_request_time')):
+            # If no session data or session expired, create new session
+            session_key = self.login(api_token)
+            if not session_key:
                 return JsonResponse({"error": "Login failed"}, status=500)
             
-        # Check if there is a unit_id
-        if self.unit_id is None:
-            self.courier_id, branch, destination_lat, destination_long = self.get_courier_id(icao24)
-            self.unit_id = self.get_unit_id(self.courier_id)
-            if not self.unit_id:
+            courier_id, branch, destination_lat, destination_long = self.get_courier_id(icao24)
+            unit_id = self.get_unit_id(courier_id)
+            if not unit_id:
                 return JsonResponse({"error": "Unit retrieval failed"}, status=500)
             
-        # Get start location
-        if branch == 'jomiy':
-            start_lat = 41.35556949663072
-            start_long = 69.25377917274001
-        elif branch == 'chinobod':
-            start_lat = 41.35554159796273
-            start_long = 69.30574801224093
-        else: 
-            start_lat = 41.35556949663072    # Default to Jomiy location for now but need to think about this
-            start_long = 69.25377917274001
+            session_data = {
+                'session_key': session_key,
+                'last_request_time': timezone.now(),
+                'courier_id': courier_id,
+                'unit_id': unit_id,
+                'branch': branch,
+                'destination_lat': destination_lat,
+                'destination_long': destination_long,
+            }
+            # Store the session data in cache
+            cache.set(f'session_data_{icao24}', session_data, timeout=300)  # 5 minutes timeout
+        
+        # Get start location based on branch
+        start_lat, start_long = self.get_start_location(session_data['branch'])
         
         # Get the last position of the vehicle
-        vehicle_info = self.get_last_position(self.session_key, self.unit_id)
+        vehicle_info = self.get_last_position(session_data['session_key'], session_data['unit_id'])
 
         if 'item' in vehicle_info and 'pos' in vehicle_info['item']:
-            # Update the last request time
-            self.last_request_time = timezone.now()
+            # Update the last request time in cache
+            session_data['last_request_time'] = timezone.now()
+            cache.set(f'session_data_{icao24}', session_data, timeout=300)
+            
             # Extracting coordinates
             y = vehicle_info['item']['pos']['y']
             x = vehicle_info['item']['pos']['x']
-            return JsonResponse({"location": {"y": y, "x": x, "start_lat": start_lat, "start_long": start_long, "destination_lat":destination_lat, "destination_long":destination_long}})
+            return JsonResponse({
+                "location": {
+                    "y": y, 
+                    "x": x, 
+                    "start_lat": start_lat, 
+                    "start_long": start_long, 
+                    "destination_lat": session_data['destination_lat'], 
+                    "destination_long": session_data['destination_long']
+                }
+            })
         else:
             return JsonResponse({"error": "Vehicle not found"}, status=404)
+
+    def is_session_expired(self, last_request_time):
+        if last_request_time is None:
+            return True
+        return timezone.now() - last_request_time > timedelta(minutes=5)
+
+    def get_start_location(self, branch):
+        if branch == 'jomiy':
+            return 41.35556949663072, 69.25377917274001
+        elif branch == 'chinobod':
+            return 41.35554159796273, 69.30574801224093
+        else: 
+            return 41.35556949663072, 69.25377917274001  # Default to Jomiy location
 
     def login(self, api_token):
         params = {
@@ -120,13 +145,6 @@ class VehicleLocationView(View):
             return response.json()
         return {}
     
-    def is_session_expired(self):
-        # Check if the session key has expired (5 minutes)
-        if self.last_request_time is None:
-            return True
-        return timezone.now() - self.last_request_time > timedelta(minutes=5)
-
-
 def index(request):
     return render(request, 'tracking/index.html')
 
