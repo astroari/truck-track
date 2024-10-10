@@ -5,4 +5,4 @@ aircrafttrack/__pycache__/
 tracking/__pycache__/
 .vscode/
 .DS_store
-requirements.txt
+#requirements.txt
