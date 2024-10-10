@@ -20,58 +20,66 @@ crm_token = settings.EMAN_CRM_TOKEN
 class VehicleLocationView(View):
 
     def get(self, request, icao24):
-        # Try to get the session data from cache
-        session_data = cache.get(f'session_data_{icao24}')
-        
-        if session_data is None or self.is_session_expired(session_data.get('last_request_time')):
-            # If no session data or session expired, create new session
-            session_key = self.login(api_token)
-            if not session_key:
-                return JsonResponse({"error": "Login failed"}, status=500)
+        logger.info(f"Received request for icao24: {icao24}")
+        try:
+            # Try to get the session data from cache
+            session_data = cache.get(f'session_data_{icao24}')
+            logger.info(f"Retrieved session data from cache: {session_data}")
             
-            courier_id, branch, destination_lat, destination_long = self.get_courier_id(icao24)
-            unit_id = self.get_unit_id(courier_id)
-            if not unit_id:
-                return JsonResponse({"error": "Unit retrieval failed"}, status=500)
-            
-            session_data = {
-                'session_key': session_key,
-                'last_request_time': timezone.now(),
-                'courier_id': courier_id,
-                'unit_id': unit_id,
-                'branch': branch,
-                'destination_lat': destination_lat,
-                'destination_long': destination_long,
-            }
-            # Store the session data in cache
-            cache.set(f'session_data_{icao24}', session_data, timeout=300)  # 5 minutes timeout
-        
-        # Get start location based on branch
-        start_lat, start_long = self.get_start_location(session_data['branch'])
-        
-        # Get the last position of the vehicle
-        vehicle_info = self.get_last_position(session_data['session_key'], session_data['unit_id'])
-
-        if 'item' in vehicle_info and 'pos' in vehicle_info['item']:
-            # Update the last request time in cache
-            session_data['last_request_time'] = timezone.now()
-            cache.set(f'session_data_{icao24}', session_data, timeout=300)
-            
-            # Extracting coordinates
-            y = vehicle_info['item']['pos']['y']
-            x = vehicle_info['item']['pos']['x']
-            return JsonResponse({
-                "location": {
-                    "y": y, 
-                    "x": x, 
-                    "start_lat": start_lat, 
-                    "start_long": start_long, 
-                    "destination_lat": session_data['destination_lat'], 
-                    "destination_long": session_data['destination_long']
+            if session_data is None or self.is_session_expired(session_data.get('last_request_time')):
+                logger.info("Session data is None or expired, creating new session")
+                # If no session data or session expired, create new session
+                session_key = self.login(api_token)
+                if not session_key:
+                    logger.error("Login failed")
+                    return JsonResponse({"error": "Login failed"}, status=500)
+                
+                courier_id, branch, destination_lat, destination_long = self.get_courier_id(icao24)
+                unit_id = self.get_unit_id(courier_id)
+                if not unit_id:
+                    return JsonResponse({"error": "Unit retrieval failed"}, status=500)
+                
+                session_data = {
+                    'session_key': session_key,
+                    'last_request_time': timezone.now(),
+                    'courier_id': courier_id,
+                    'unit_id': unit_id,
+                    'branch': branch,
+                    'destination_lat': destination_lat,
+                    'destination_long': destination_long,
                 }
-            })
-        else:
-            return JsonResponse({"error": "Vehicle not found"}, status=404)
+                # Store the session data in cache
+                cache.set(f'session_data_{icao24}', session_data, timeout=300)  # 5 minutes timeout
+            
+            # Get start location based on branch
+            start_lat, start_long = self.get_start_location(session_data['branch'])
+            
+            # Get the last position of the vehicle
+            vehicle_info = self.get_last_position(session_data['session_key'], session_data['unit_id'])
+
+            if 'item' in vehicle_info and 'pos' in vehicle_info['item']:
+                # Update the last request time in cache
+                session_data['last_request_time'] = timezone.now()
+                cache.set(f'session_data_{icao24}', session_data, timeout=300)
+                
+                # Extracting coordinates
+                y = vehicle_info['item']['pos']['y']
+                x = vehicle_info['item']['pos']['x']
+                return JsonResponse({
+                    "location": {
+                        "y": y, 
+                        "x": x, 
+                        "start_lat": start_lat, 
+                        "start_long": start_long, 
+                        "destination_lat": session_data['destination_lat'], 
+                        "destination_long": session_data['destination_long']
+                    }
+                })
+            else:
+                return JsonResponse({"error": "Vehicle not found"}, status=404)
+        except Exception as e:
+            logger.exception(f"An error occurred while processing request for icao24: {icao24}")
+            return JsonResponse({"error": "An unexpected error occurred"}, status=500)
 
     def is_session_expired(self, last_request_time):
         if last_request_time is None:
@@ -93,10 +101,33 @@ class VehicleLocationView(View):
         }
 
         request_url = f"{api_url}?svc=token/login&params={json.dumps(params)}"
-        response = requests.post(request_url)
-
-        if response.ok:
-            return response.json().get('eid')
+        logger.info(f"Attempting login with URL: {request_url}")
+        
+        try:
+            response = requests.post(request_url)
+            logger.info(f"Login response status code: {response.status_code}")
+            logger.info(f"Login response content: {response.text}")
+            
+            if response.ok:
+                data = response.json()
+                logger.info(f"Parsed JSON response: {data}")
+                eid = data.get('eid')
+                if eid:
+                    logger.info(f"Login successful, eid: {eid}")
+                    return eid
+                else:
+                    logger.error("Login failed: 'eid' not found in response")
+            else:
+                logger.error(f"Login failed with status code: {response.status_code}")
+            
+            return None
+        except requests.RequestException as e:
+            logger.error(f"Login failed due to request exception: {str(e)}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON response: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected error during login: {str(e)}")
+        
         return None
     
     def get_courier_id(self, order_id):
