@@ -8,6 +8,9 @@ import json
 from django.utils import timezone
 from datetime import timedelta
 from django.core.cache import cache
+import logging
+
+logger = logging.getLogger(__name__)
 
 api_url = 'http://1.gpsmonitor.uz/wialon/ajax.html'
 api_token = settings.WIALON_TOKEN
