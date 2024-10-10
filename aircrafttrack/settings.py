@@ -31,8 +31,8 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-&psk#na5l=p3q8_a+-$4w1f^
 #DEBUG = True
 DEBUG = env.bool('DEBUG_ENV_VAR', default=False)
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['astroari.pythonanywhere.com', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://astroari.pythonanywhere.com']
 
 # Application definition
 
