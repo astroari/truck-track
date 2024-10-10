@@ -13,7 +13,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 api_url = 'http://1.gpsmonitor.uz/wialon/ajax.html'
-api_token = settings.WIALON_TOKEN
+#api_token = settings.WIALON_TOKEN
+api_token = '9507c2ae48bac73a7204cdc1f5b55717934F0DA4730AE78BF6CB056330380B67BEF31945'
 crm_token = settings.EMAN_CRM_TOKEN
 
 class VehicleLocationView(View):
