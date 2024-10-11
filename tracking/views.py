@@ -148,3 +148,34 @@ class VehicleLocationView(View):
 def index(request):
     return render(request, 'tracking/index.html')
 
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
+@csrf_exempt
+@require_POST
+def webhook_receiver(request):
+    try:
+        data = json.loads(request.body)
+        
+        # Extract the required fields
+        order_id = data.get('id')
+        #update_type = data.get('type') # TODO: Add these fields once they are available
+        #update_time = data.get('time')
+        
+        #if not all([order_id, update_type, update_time]):
+        if not order_id:
+            return HttpResponse("Missing required fields: id, type, or time", status=400)
+    
+        
+        # Log the received webhook data
+        print(f"Received webhook: Order ID: {order_id}")
+        #print(f"Received webhook: Order ID: {order_id}, Type: {update_type}, Time: {update_datetime}")
+        
+        # TODO: Add logic to handle the order update here
+        
+        return HttpResponse("Webhook received successfully", status=200)
+    except json.JSONDecodeError:
+        return HttpResponse("Invalid JSON data", status=400)
+    except Exception as e:
+        return HttpResponse(f"Error processing webhook: {str(e)}", status=500)
+
