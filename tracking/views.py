@@ -113,7 +113,8 @@ class VehicleLocationView(View):
             branch = branch.replace(" ", "").lower()
             destination_lat = delivery_info.get('latitude')
             destination_long = delivery_info.get('longitude')
-            return courier_id, branch, destination_lat, destination_long
+            courier_status = delivery_info.get('courier_status')
+            return courier_id, branch, destination_lat, destination_long, courier_status
         return None
 
     def get_unit_id(self, courier_id):
