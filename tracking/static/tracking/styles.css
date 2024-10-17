@@ -153,4 +153,23 @@ body {
     width: 40px;
     background-color: #fff;
   }
-  
+
+  #phone-cover {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    width: 165px;
+    padding: 35px;
+    margin: -250px auto 0 auto;
+    background-color: whitesmoke;
+    border-radius: 20px;
+    box-shadow: 0 10px 10px #5cac83, 0 0 0;
+    z-index: 9999;
+    font-family: Nunito, sans-serif;
+    text-align: center;
+    font-size: 1rem;
+  }
+  #infocard, #phonenum {
+    margin: 0;
+  }

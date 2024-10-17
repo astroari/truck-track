@@ -25,8 +25,8 @@ class VehicleLocationView(View):
             if not session_key:
                 return JsonResponse({"error": "Login failed"}, status=500)
             
-            courier_id, branch, destination_lat, destination_long = self.get_courier_id(icao24)
-            unit_id = self.get_unit_id(courier_id)
+            courier_id, branch, destination_lat, destination_long, courier_status = self.get_courier_id(icao24)
+            unit_id, courier_phone = self.get_unit_id(courier_id)
             if not unit_id:
                 return JsonResponse({"error": "Unit retrieval failed"}, status=500)
             
@@ -38,6 +38,8 @@ class VehicleLocationView(View):
                 'branch': branch,
                 'destination_lat': destination_lat,
                 'destination_long': destination_long,
+                'courier_status': courier_status,
+                'courier_phone': courier_phone
             }
             # Store the session data in cache
             cache.set(f'session_data_{icao24}', session_data, timeout=300)  # 5 minutes timeout
@@ -63,7 +65,8 @@ class VehicleLocationView(View):
                     "start_lat": start_lat, 
                     "start_long": start_long, 
                     "destination_lat": session_data['destination_lat'], 
-                    "destination_long": session_data['destination_long']
+                    "destination_long": session_data['destination_long'],
+                    "courier_phone": courier_phone,
                 }
             })
         else:
@@ -130,7 +133,8 @@ class VehicleLocationView(View):
 
         if response.ok:
             unit_id = response.json().get('gps_id')
-            return unit_id
+            courier_phone = response.json().get('phone')
+            return unit_id, courier_phone
         return None
 
     def get_last_position(self, session_key, unit_id):

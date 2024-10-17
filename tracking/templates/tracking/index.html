@@ -29,6 +29,11 @@
         </form>
       </div>
 
+    <div id="phone-cover">
+        <p id="infocard">Enter order ID to track your delivery</p>
+        <a href="" id="phonenum"></a>
+    </div>
+
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -69,6 +74,8 @@
         // Check initial position of truck marker (to stay zoomed in)
         let isInitialPosition = true;
 
+        // Store the courier phone number
+        let courierPhone = null;
 
         // Placeholder for the interval ID
         var dataFetchInterval = null;
@@ -106,6 +113,14 @@
                         const startLng = aircraftData['start_long'];
                         const destinationLat = aircraftData['destination_lat'];
                         const destinationLng = aircraftData['destination_long'];
+                        
+                        // Only set courierPhone if it hasn't been set before
+                        if (courierPhone === null) {
+                            courierPhone = aircraftData['courier_phone'];
+                            // Update the phone number display
+                            updatePhoneDisplay();
+                        }
+                        
                         var startMarker = L.marker([startLat, startLng],{ icon: originIcon }).addTo(map); // these markers shouldn't be called if we are using routing functin i think
                         var destinationMarker = L.marker([destinationLat, destinationLng],{ icon: destIcon }).addTo(map);
                         console.log(latitude, longitude);
@@ -125,6 +140,17 @@
 
                 })
                 .catch(error => console.error('Error fetching aircraft data:', error));
+        }
+
+        // Function to update the phone display
+        function updatePhoneDisplay() {
+            const phonenum = document.getElementById("phonenum");
+            const infoCard = document.getElementById("infocard");
+            const a = document.querySelector('a[href=""]');
+            
+            phonenum.innerHTML = "Call the driver";
+            infoCard.innerHTML = "Your order will be delivered by <name>";
+            a.setAttribute("href", "tel:" + courierPhone);
         }
 
         // Function to update the aircraft marker
